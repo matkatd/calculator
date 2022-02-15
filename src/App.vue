@@ -7,10 +7,11 @@
 </template>
 
 <script>
+import { evaluate } from "mathjs";
 import Header from "./components/Header";
 import AnswerBlock from "./components/AnswerBlock";
 import Keypad from "./components/Keypad";
-
+// FIXME!!!! It's doing integer division (rounding) do something about it please :)
 export default {
   name: "App",
   components: {
@@ -20,52 +21,112 @@ export default {
   },
   data() {
     return {
-      answer: "",
+      input: "0",
+      storage: "0",
+      answer: "0",
+      mathStuff: 0.0,
     };
   },
   methods: {
     makeCalculation(value) {
       console.log(this.answer);
-      const size = this.answer.length;
-      const lastChar = this.answer.slice(size - 1, size);
+      const size = this.storage.length;
+      const lastChar = this.storage.slice(size - 1, size);
+
       if (value === "=") {
-        if (!isNaN(lastChar)) {
-          console.log("did it work?");
+        if (!isNAN(lastChar)) {
           let equals = "";
           try {
-            equals = eval(this.answer);
+            equals = evaluate(this.storage);
           } catch {
             this.answer = "ERROR";
           }
-          if (this.answer.includes(".")) {
-            this.answer = equals.toFixed(4);
-          } else {
-            this.answer = equals.toFixed(0);
-          }
-        } else return;
-
-        this.$emit("update:answer");
+          this.answer = equals;
+          return;
+        }
       } else if (value === "DEL") {
-        if (this.answer === "undefined" || this.answer === "ERROR") {
-          this.answer = "";
+        if (
+          this.answer === "undefined" ||
+          this.answer === "ERROR" ||
+          this.input === "undefined" ||
+          this.input === "ERROR"
+        ) {
+          this.answer = "0";
+          this.input = "0";
+        } else if (this.answer === "0" || this.input === "0") {
+          return;
+        } else {
+          this.input = this.input.slice(0, -1);
         }
-        this.answer = this.answer.slice(0, -1);
       } else if (value === "RESET") {
-        this.answer = "";
+        this.input = "0";
+        this.storage = "0";
+        this.answer = this.input;
       } else {
-        if (this.answer === "undefined" || this.answer === "ERROR") {
-          this.answer = "";
-        }
         if (value === "x") {
-          value = "*";
+          this.input *= 1.0; // Not sure if this will work since this.input is a string, but worth a shot
+          this.storage += this.input;
+          this.storage += "*";
+          this.input = 0;
+        } else if (value === "/") {
+          this.input *= 1.0;
+          this.storage += this.input;
+          this.storage += "/";
+        } else if (value === "+") {
+          this.storage += this.input;
+          this.storage += "+";
+        } else if (value === "-") {
+          this.storage += this.input;
+          this.storage += "-";
+        } else {
+          // value is a number
+
+          if (this.input === "0") {
+            this.input = value;
+          } else {
+            this.input += value;
+          }
+
+          this.answer = this.input;
         }
-        if (value === "." && (isNaN(lastChar) || this.answer === "")) {
-          value = "0" + value;
-        }
-        this.answer += value;
-        this.$emit("update:answer", this.answer);
       }
     },
+
+    // if (value === "=") {
+    //   if (!isNaN(lastChar)) {
+    //     let equals = "";
+    //     try {
+    //       equals = evaluate(this.answer);
+    //     } catch {
+    //       this.answer = "ERROR";
+    //     }
+    //     if (this.answer.includes(".")) {
+    //       this.answer = equals.toFixed(4);
+    //     } else {
+    //       this.answer = equals.toFixed(0);
+    //     }
+    //   } else return;
+
+    // } else if (value === "DEL") {
+    //   if (this.answer === "undefined" || this.answer === "ERROR") {
+    //     this.answer = "";
+    //   }
+    //   this.answer = this.answer.slice(0, -1);
+    // } else if (value === "RESET") {
+    //   this.answer = "";
+    // } else {
+    //   if (this.answer === "undefined" || this.answer === "ERROR") {
+    //     this.answer = "";
+    //   }
+    //   if (value === "x") {
+    //     value = "*";
+    //   }
+    //   if (value === "." && (isNaN(lastChar) || this.answer === "")) {
+    //     value = "0" + value;
+    //   }
+    //   this.answer += value;
+    //   this.$emit("update:answer", this.answer);
+    // }
   },
 };
 </script>
@@ -97,7 +158,6 @@ export default {
 
 html,
 body {
-  font-family: Arial, Helvetica, sans-serif;
   background: var(--background);
 }
 
@@ -113,7 +173,7 @@ body {
   margin-right: auto;
   width: 60%;
   height: 100%;
-  max-height: 550px;
+  max-height: 600px;
   max-width: 500px;
   margin-top: 1%;
   margin-bottom: 1%;

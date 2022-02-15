@@ -66,8 +66,8 @@ export default {
   font-weight: 600;
   width: 100%;
   height: 100%;
-  max-height: 90px;
-  max-width: 90px;
+  max-height: 80px;
+  max-width: 80px;
   padding-top: 2.5vw;
   padding-bottom: 2.5vw;
   align-self: center;
@@ -108,5 +108,12 @@ export default {
   color: var(--equals-text-color);
   grid-column: 3/5;
   max-width: 200px;
+}
+
+@media screen and (max-width: 650px) {
+  .key {
+    max-height: 60px;
+    max-width: 60px;
+  }
 }
 </style>
